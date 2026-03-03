@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* DislexiaEdu: Warm Sage + Cream palette — calming, high-contrast, accessible */
+    --background: 0.97 0.012 95;
+    --foreground: 0.22 0.03 210;
+    --card: 0.99 0.006 90;
+    --card-foreground: 0.22 0.03 210;
+    --popover: 0.99 0.006 90;
+    --popover-foreground: 0.22 0.03 210;
+    --primary: 0.45 0.1 155;
+    --primary-foreground: 0.99 0.005 90;
+    --secondary: 0.93 0.018 100;
+    --secondary-foreground: 0.3 0.04 180;
+    --muted: 0.94 0.014 95;
+    --muted-foreground: 0.52 0.025 200;
+    --accent: 0.88 0.08 95;
+    --accent-foreground: 0.25 0.04 160;
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.88 0.02 140;
+    --input: 0.91 0.015 110;
+    --ring: 0.45 0.1 155;
+
+    /* Chart colors */
+    --chart-1: 0.65 0.14 155;
+    --chart-2: 0.7 0.12 85;
+    --chart-3: 0.55 0.1 200;
+    --chart-4: 0.8 0.13 60;
+    --chart-5: 0.65 0.15 30;
+
+    /* Sidebar */
+    --sidebar: 0.27 0.04 210;
+    --sidebar-foreground: 0.95 0.01 90;
+    --sidebar-primary: 0.68 0.12 155;
+    --sidebar-primary-foreground: 0.99 0.005 90;
+    --sidebar-accent: 0.33 0.05 200;
+    --sidebar-accent-foreground: 0.95 0.01 90;
+    --sidebar-border: 0.35 0.04 210;
+    --sidebar-ring: 0.68 0.12 155;
+
+    /* Custom app tokens */
+    --sage: 0.45 0.1 155;
+    --sage-light: 0.85 0.06 155;
+    --sage-dark: 0.28 0.08 165;
+    --cream: 0.97 0.015 95;
+    --amber: 0.78 0.12 75;
+    --reader-bg: 0.99 0.008 90;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Accessible focus ring */
+  *:focus-visible {
+    outline: 2px solid oklch(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+/* ================================================================
+   Scrollbar styling
+   ================================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: oklch(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--border));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--muted-foreground));
+}
+
+/* ================================================================
+   Reading ruler
+   ================================================================ */
+.reading-ruler {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 2.5rem;
+  background: oklch(0.7 0.08 155 / 0.22);
+  pointer-events: none;
+  z-index: 40;
+  border-top: 1px solid oklch(0.5 0.1 155 / 0.25);
+  border-bottom: 1px solid oklch(0.5 0.1 155 / 0.25);
+  transition: top 0.05s linear;
+}
+
+/* ================================================================
+   Focus mode overlay
+   ================================================================ */
+.focus-mode-active .reader-paragraph {
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
+}
+.focus-mode-active .reader-paragraph:hover {
+  opacity: 1;
+}
+
+/* ================================================================
+   Reader content
+   ================================================================ */
+.reader-content {
+  font-family: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+  word-spacing: 0.1em;
+  text-align: left;
+}
+
+.reader-content p {
+  margin-bottom: 1.2em;
+}
+
+/* ================================================================
+   Smooth transitions for settings
+   ================================================================ */
+.reader-container {
+  transition: font-size 0.2s ease, letter-spacing 0.2s ease, line-height 0.2s ease, background-color 0.3s ease;
+}
+
+/* ================================================================
+   Annotation color classes
+   ================================================================ */
+.annotation-yellow { background-color: #FFF9C4; border-left: 3px solid #F9A825; }
+.annotation-pink   { background-color: #FCE4EC; border-left: 3px solid #E91E63; }
+.annotation-green  { background-color: #E8F5E9; border-left: 3px solid #4CAF50; }
+.annotation-blue   { background-color: #E3F2FD; border-left: 3px solid #2196F3; }
+.annotation-orange { background-color: #FFF3E0; border-left: 3px solid #FF9800; }
+
+/* ================================================================
+   Page entry animation
+   ================================================================ */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.4s ease both;
+}
+
+/* ================================================================
+   Sidebar nav active state
+   ================================================================ */
+.sidebar-nav-link {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-150;
+  color: oklch(var(--sidebar-foreground) / 0.7);
+}
+.sidebar-nav-link:hover {
+  background-color: oklch(var(--sidebar-accent));
+  color: oklch(var(--sidebar-foreground));
+}
+.sidebar-nav-link.active {
+  @apply font-semibold;
+  background-color: oklch(var(--sidebar-primary) / 0.2);
+  color: oklch(var(--sidebar-primary));
+}
+
+/* ================================================================
+   Progress bar animation
+   ================================================================ */
+@keyframes progressFill {
+  from { width: 0; }
+}
+.animate-progress {
+  animation: progressFill 0.6s ease both;
+}
