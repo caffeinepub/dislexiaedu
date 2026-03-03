@@ -2,7 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Anotacao,
   ConfiguracaoLeitura,
+  Conquista,
+  Desafio,
+  EntradaRanking,
   Progresso,
+  ProgressoDesafio,
+  Recompensa,
   Texto,
 } from "../backend.d.ts";
 import { useActor } from "./useActor";
@@ -244,5 +249,109 @@ export function useSalvarConfiguracaoLeitura() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["configuracao"] });
     },
+  });
+}
+
+// ─── Desafios ─────────────────────────────────────────────────────────────────
+
+export function useGetDesafiosAtivos() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Desafio[]>({
+    queryKey: ["desafios", "ativos"],
+    queryFn: async () => {
+      if (!actor) return [];
+      const [ativos, exemplos] = await Promise.all([
+        actor.getDesafiosAtivos(),
+        actor.getDesafiosExemplo(),
+      ]);
+      const ids = new Set(ativos.map((d) => d.id.toString()));
+      const deduped = [
+        ...ativos,
+        ...exemplos.filter((d) => !ids.has(d.id.toString())),
+      ];
+      return deduped;
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetTodosProgressosDesafio() {
+  const { actor, isFetching } = useActor();
+  return useQuery<ProgressoDesafio[]>({
+    queryKey: ["desafios", "progressos"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getTodosProgressosDesafio();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Recompensas ─────────────────────────────────────────────────────────────
+
+export function useGetSaldoAluno() {
+  const { actor, isFetching } = useActor();
+  return useQuery<bigint>({
+    queryKey: ["saldo"],
+    queryFn: async () => {
+      if (!actor) return BigInt(0);
+      return actor.getSaldoAluno();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetRecompensas() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Recompensa[]>({
+    queryKey: ["recompensas"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getRecompensas();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useResgatarSaldo() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Actor não disponível");
+      return actor.resgatarSaldo();
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["saldo"] });
+      void qc.invalidateQueries({ queryKey: ["recompensas"] });
+    },
+  });
+}
+
+// ─── Conquistas ───────────────────────────────────────────────────────────────
+
+export function useGetConquistas() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Conquista[]>({
+    queryKey: ["conquistas"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getConquistas();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Ranking ─────────────────────────────────────────────────────────────────
+
+export function useGetRanking() {
+  const { actor, isFetching } = useActor();
+  return useQuery<EntradaRanking[]>({
+    queryKey: ["ranking"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getRanking();
+    },
+    enabled: !!actor && !isFetching,
   });
 }

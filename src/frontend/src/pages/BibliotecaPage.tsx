@@ -29,7 +29,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@tanstack/react-router";
 import {
@@ -44,7 +43,7 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Texto } from "../backend.d.ts";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
@@ -52,6 +51,8 @@ import {
   useBuscarTextos,
   useCriarTexto,
   useDeletarTexto,
+  useGetTextosExemplo,
+  useGetTodosTextos,
 } from "../hooks/useQueries";
 
 const CATEGORIAS = ["Todos", "Resumos", "Artigos", "Anotações", "Exercícios"];
@@ -78,10 +79,37 @@ export default function BibliotecaPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<bigint | null>(null);
 
-  const { data: textos, isLoading, isError } = useBuscarTextos(searchTerm);
+  const { data: textosAll, isLoading: loadingAll } = useGetTodosTextos();
+  const { data: textosExemplo, isLoading: loadingExemplo } =
+    useGetTextosExemplo();
+  const { data: textosBusca, isLoading: loadingBusca } =
+    useBuscarTextos(searchTerm);
   const { mutateAsync: criarTexto, isPending: isCriando } = useCriarTexto();
   const { mutateAsync: deletarTexto, isPending: isDeletando } =
     useDeletarTexto();
+
+  const isLoading = loadingAll || loadingExemplo;
+
+  // Deduplicate textos
+  const allTextos = useMemo(() => {
+    const all = [...(textosAll ?? []), ...(textosExemplo ?? [])];
+    const seen = new Set<string>();
+    return all.filter((t) => {
+      const key = t.id.toString();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [textosAll, textosExemplo]);
+
+  // Filter by search + category
+  const filteredTextos = useMemo(() => {
+    let textos = searchTerm.trim() ? (textosBusca ?? allTextos) : allTextos;
+    if (activeCategory !== "Todos") {
+      textos = textos.filter((t) => t.categoria === activeCategory);
+    }
+    return textos;
+  }, [searchTerm, textosBusca, allTextos, activeCategory]);
 
   const [form, setForm] = useState({
     titulo: "",
@@ -90,12 +118,11 @@ export default function BibliotecaPage() {
     autor: "",
   });
 
-  const filteredTextos = (textos ?? []).filter((t) =>
-    activeCategory === "Todos" ? true : t.categoria === activeCategory,
-  );
-
   const principalName =
     identity?.getPrincipal().toString().slice(0, 8) ?? "Usuário";
+
+  const handleAddOpen = useCallback(() => setAddOpen(true), []);
+  const handleAddClose = useCallback(() => setAddOpen(false), []);
 
   async function handleCriar() {
     if (!form.titulo.trim() || !form.conteudo.trim() || !form.autor.trim()) {
@@ -124,18 +151,20 @@ export default function BibliotecaPage() {
 
   return (
     <div
-      className="min-h-screen pb-20 md:pb-8 animate-fade-slide-up"
+      className="min-h-screen pb-24 md:pb-8 animate-fade-slide-up"
       data-ocid="biblioteca.page"
     >
       {/* Header */}
       <div className="px-6 md:px-8 pt-8 pb-6 border-b border-border/40">
         <div className="flex items-start justify-between gap-4 mb-5">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Library className="h-5 w-5 text-primary" />
+            <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Library className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Biblioteca</h1>
+              <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">
+                Biblioteca
+              </h1>
               <p className="text-muted-foreground text-sm">
                 {filteredTextos.length} texto
                 {filteredTextos.length !== 1 ? "s" : ""} disponível
@@ -144,8 +173,8 @@ export default function BibliotecaPage() {
             </div>
           </div>
           <Button
-            onClick={() => setAddOpen(true)}
-            className="shrink-0"
+            onClick={handleAddOpen}
+            className="shrink-0 h-11 px-5 font-semibold"
             data-ocid="biblioteca.add_button"
           >
             <Plus className="h-4 w-4 mr-1.5" />
@@ -155,12 +184,12 @@ export default function BibliotecaPage() {
 
         {/* Search */}
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
           <Input
             placeholder="Buscar por título..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
+            className="pl-10 h-11 text-base"
             data-ocid="biblioteca.search_input"
           />
           {searchTerm && (
@@ -168,56 +197,56 @@ export default function BibliotecaPage() {
               type="button"
               onClick={() => setSearchTerm("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Limpar busca"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
 
-        {/* Category tabs */}
-        <Tabs
-          value={activeCategory}
-          onValueChange={setActiveCategory}
-          data-ocid="biblioteca.filter.tab"
-        >
-          <TabsList className="flex-wrap h-auto gap-1 bg-muted/60 p-1">
-            {CATEGORIAS.map((cat) => (
-              <TabsTrigger
-                key={cat}
-                value={cat}
-                className="text-xs"
-                data-ocid="biblioteca.filter.tab"
-              >
-                {cat}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        {/* Category select */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground shrink-0">
+            Categoria:
+          </span>
+          <Select value={activeCategory} onValueChange={setActiveCategory}>
+            <SelectTrigger
+              className="h-10 w-44 text-sm"
+              data-ocid="biblioteca.categoria_select"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIAS.map((cat) => (
+                <SelectItem key={cat} value={cat} className="text-sm">
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Text list */}
+      {/* Text grid */}
       <div className="px-6 md:px-8 py-6">
-        {isError && (
+        {isLoading && loadingBusca && (
           <div
-            className="flex items-center gap-2 text-destructive text-sm mb-4 p-3 rounded-lg bg-destructive/10"
-            data-ocid="biblioteca.error_state"
+            className="flex items-center gap-2 text-muted-foreground text-sm mb-4"
+            data-ocid="biblioteca.loading_state"
           >
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            Erro ao carregar textos. Tente recarregar a página.
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Carregando...
           </div>
         )}
 
         {isLoading ? (
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            data-ocid="biblioteca.loading_state"
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Card key={i} className="overflow-hidden">
                 <CardContent className="p-5 space-y-3">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                  <Skeleton className="h-2 w-full" />
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-3 w-full" />
                 </CardContent>
               </Card>
             ))}
@@ -227,17 +256,22 @@ export default function BibliotecaPage() {
             className="flex flex-col items-center justify-center py-20 text-center"
             data-ocid="biblioteca.empty_state"
           >
-            <BookOpen className="h-12 w-12 text-muted-foreground/30 mb-4" />
-            <p className="text-muted-foreground font-medium mb-1">
+            <div className="h-20 w-20 rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
+              <BookOpen className="h-10 w-10 text-muted-foreground/40" />
+            </div>
+            <p className="text-foreground font-semibold text-lg mb-1">
               Nenhum texto encontrado
             </p>
-            <p className="text-muted-foreground text-sm mb-4">
+            <p className="text-muted-foreground text-sm mb-5">
               {searchTerm
                 ? `Nenhum resultado para "${searchTerm}"`
                 : "Adicione seu primeiro texto na biblioteca"}
             </p>
             {!searchTerm && (
-              <Button variant="outline" onClick={() => setAddOpen(true)}>
+              <Button
+                onClick={handleAddOpen}
+                className="h-11 px-6 font-semibold"
+              >
                 <Plus className="h-4 w-4 mr-1.5" />
                 Adicionar texto
               </Button>
@@ -271,12 +305,14 @@ export default function BibliotecaPage() {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-lg" data-ocid="biblioteca.dialog">
           <DialogHeader>
-            <DialogTitle>Adicionar novo texto</DialogTitle>
+            <DialogTitle className="text-lg">Adicionar novo texto</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="titulo">Título *</Label>
+              <Label htmlFor="titulo" className="text-sm font-semibold">
+                Título *
+              </Label>
               <Input
                 id="titulo"
                 placeholder="Título do texto"
@@ -284,11 +320,14 @@ export default function BibliotecaPage() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, titulo: e.target.value }))
                 }
+                className="h-11 text-base"
                 data-ocid="biblioteca.input"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="autor">Autor *</Label>
+              <Label htmlFor="autor" className="text-sm font-semibold">
+                Autor *
+              </Label>
               <Input
                 id="autor"
                 placeholder={`ex: ${principalName}`}
@@ -296,15 +335,18 @@ export default function BibliotecaPage() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, autor: e.target.value }))
                 }
+                className="h-11 text-base"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="categoria">Categoria</Label>
+              <Label htmlFor="categoria" className="text-sm font-semibold">
+                Categoria
+              </Label>
               <Select
                 value={form.categoria}
                 onValueChange={(v) => setForm((f) => ({ ...f, categoria: v }))}
               >
-                <SelectTrigger id="categoria">
+                <SelectTrigger id="categoria" className="h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,7 +359,9 @@ export default function BibliotecaPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="conteudo">Conteúdo *</Label>
+              <Label htmlFor="conteudo" className="text-sm font-semibold">
+                Conteúdo *
+              </Label>
               <Textarea
                 id="conteudo"
                 placeholder="Cole ou digite o texto aqui..."
@@ -326,7 +370,7 @@ export default function BibliotecaPage() {
                   setForm((f) => ({ ...f, conteudo: e.target.value }))
                 }
                 rows={6}
-                className="resize-none"
+                className="resize-none text-base"
               />
             </div>
           </div>
@@ -334,7 +378,8 @@ export default function BibliotecaPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setAddOpen(false)}
+              onClick={handleAddClose}
+              className="h-11"
               data-ocid="biblioteca.cancel_button"
             >
               Cancelar
@@ -342,6 +387,7 @@ export default function BibliotecaPage() {
             <Button
               onClick={handleCriar}
               disabled={isCriando}
+              className="h-11 font-semibold"
               data-ocid="biblioteca.submit_button"
             >
               {isCriando ? (
@@ -377,7 +423,7 @@ export default function BibliotecaPage() {
             <AlertDialogAction
               onClick={() => deleteTarget && handleDelete(deleteTarget)}
               disabled={isDeletando}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 font-semibold"
               data-ocid="biblioteca.confirm_button"
             >
               {isDeletando ? (
@@ -389,6 +435,21 @@ export default function BibliotecaPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Footer */}
+      <footer className="px-8 py-6 border-t border-border/40 mt-4">
+        <p className="text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()}. Construído com ❤️ usando{" "}
+          <a
+            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+            className="underline hover:text-foreground transition-colors"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            caffeine.ai
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }
@@ -413,42 +474,43 @@ function TextoCard({
       exit={{ opacity: 0, scale: 0.97 }}
       data-ocid={`biblioteca.item.${index}`}
     >
-      <Card className="group hover:shadow-card transition-all duration-200 border-border/60 hover:border-primary/30">
+      <Card className="group hover:shadow-card transition-all duration-200 border-border/60 hover:border-primary/30 overflow-hidden">
         <CardContent className="p-5">
           <div className="flex items-start gap-3 mb-3">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-foreground text-sm leading-snug group-hover:text-primary transition-colors truncate">
+              <div className="flex items-center gap-2 mb-1.5">
+                <h3 className="font-display font-semibold text-foreground text-base leading-snug group-hover:text-primary transition-colors truncate">
                   {texto.titulo}
                 </h3>
               </div>
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-sm">
                 {texto.autor} · {formatDate(texto.dataCriacao)}
               </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Badge
-                className={
-                  categoryColors[texto.categoria] || "bg-gray-100 text-gray-700"
-                }
-                variant="secondary"
-              >
-                {texto.categoria}
-              </Badge>
-            </div>
+            <Badge
+              className={cn(
+                "shrink-0 text-xs font-medium",
+                categoryColors[texto.categoria] || "bg-gray-100 text-gray-700",
+              )}
+              variant="secondary"
+            >
+              {texto.categoria}
+            </Badge>
           </div>
 
-          <p className="text-muted-foreground text-xs line-clamp-2 leading-relaxed mb-4">
-            {texto.conteudo.slice(0, 150)}
-            {texto.conteudo.length > 150 ? "..." : ""}
+          <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed mb-4">
+            {texto.conteudo.slice(0, 160)}
+            {texto.conteudo.length > 160 ? "..." : ""}
           </p>
 
           <div className="flex items-center gap-3">
             <div className="flex-1 flex items-center gap-2">
-              <Progress value={0} className="h-1.5 flex-1" />
-              <span className="text-xs text-muted-foreground shrink-0">0%</span>
+              <Progress value={0} className="h-2 flex-1 rounded-full" />
+              <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
+                0%
+              </span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               {isOwner && (
                 <button
                   type="button"
@@ -456,17 +518,21 @@ function TextoCard({
                     e.preventDefault();
                     onDelete();
                   }}
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                   title="Remover texto"
                   data-ocid={`biblioteca.delete_button.${index}`}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               )}
               <Link to="/leitor/$id" params={{ id: texto.id.toString() }}>
-                <Button variant="ghost" size="sm" className="h-7 px-3 text-xs">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-4 text-sm font-semibold border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                >
                   Ler
-                  <ChevronRight className="h-3 w-3 ml-1" />
+                  <ChevronRight className="h-3.5 w-3.5 ml-1" />
                 </Button>
               </Link>
             </div>
@@ -475,4 +541,8 @@ function TextoCard({
       </Card>
     </motion.div>
   );
+}
+
+function cn(...classes: (string | false | undefined | null)[]) {
+  return classes.filter(Boolean).join(" ");
 }

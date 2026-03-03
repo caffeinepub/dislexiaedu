@@ -10,9 +10,7 @@ export default {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      screens: { "2xl": "1400px" },
     },
     extend: {
       colors: {
@@ -66,20 +64,21 @@ export default {
           border: "oklch(var(--sidebar-border))",
           ring: "oklch(var(--sidebar-ring))",
         },
-        sage: {
-          DEFAULT: "oklch(var(--sage))",
-          light: "oklch(var(--sage-light))",
-          dark: "oklch(var(--sage-dark))",
+        gold: {
+          DEFAULT: "oklch(var(--token-gold))",
+          light: "oklch(var(--token-gold-light))",
+          dark: "oklch(var(--token-gold-dark))",
         },
-        cream: "oklch(var(--cream))",
-        amber: {
-          reader: "oklch(var(--amber))",
+        teal: {
+          DEFAULT: "oklch(var(--teal))",
+          light: "oklch(var(--teal-light))",
+          dark: "oklch(var(--teal-dark))",
         },
       },
       fontFamily: {
-        sans: ["Figtree", "Segoe UI", "system-ui", "sans-serif"],
-        display: ["Figtree", "Georgia", "serif"],
-        reading: ["Figtree", "Arial", "Helvetica Neue", "sans-serif"],
+        sans:    ["Figtree", "system-ui", "sans-serif"],
+        display: ["Outfit", "system-ui", "sans-serif"],
+        reading: ["Figtree", "Arial", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -87,10 +86,12 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-        soft: "0 2px 12px 0 oklch(0.3 0.04 210 / 0.08)",
-        card: "0 4px 24px 0 oklch(0.3 0.04 210 / 0.1)",
+        xs:     "0 1px 2px 0 rgba(0,0,0,0.05)",
+        soft:   "0 2px 12px 0 oklch(0.3 0.04 210 / 0.08)",
+        card:   "0 4px 24px 0 oklch(0.3 0.04 210 / 0.1)",
         reader: "0 8px 40px 0 oklch(0.3 0.04 210 / 0.12)",
+        gold:   "0 4px 20px 0 oklch(0.78 0.15 75 / 0.3)",
+        "gold-lg": "0 8px 32px 0 oklch(0.78 0.15 75 / 0.4)",
       },
       keyframes: {
         "accordion-down": {
@@ -105,11 +106,16 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        pulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        shimmer: "shimmer 1.5s infinite",
+        "accordion-up":   "accordion-up 0.2s ease-out",
+        shimmer:          "shimmer 1.5s infinite",
+        pulse:            "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

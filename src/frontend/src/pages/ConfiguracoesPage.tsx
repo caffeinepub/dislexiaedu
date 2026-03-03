@@ -155,7 +155,7 @@ export default function ConfiguracoesPage() {
             <Settings className="h-5 w-5 text-sage-dark" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">
               Configurações
             </h1>
             <p className="text-muted-foreground text-sm">
@@ -396,7 +396,7 @@ export default function ConfiguracoesPage() {
                     size="lg"
                     onClick={handleSave}
                     disabled={isSaving}
-                    data-ocid="settings.save_button"
+                    data-ocid="configuracoes.salvar_button"
                   >
                     {isSaving ? (
                       <>

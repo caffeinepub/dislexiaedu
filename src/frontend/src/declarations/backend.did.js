@@ -40,11 +40,46 @@ export const ConfiguracaoLeitura = IDL.Record({
   'usuarioId' : IDL.Text,
   'tamanhoFonte' : IDL.Nat,
 });
+export const Conquista = IDL.Record({
+  'id' : IDL.Nat,
+  'marco' : IDL.Text,
+  'dataConquista' : IDL.Int,
+  'descricao' : IDL.Text,
+  'nome' : IDL.Text,
+  'usuarioId' : IDL.Text,
+});
+export const Desafio = IDL.Record({
+  'id' : IDL.Nat,
+  'recompensaTokens' : IDL.Nat,
+  'titulo' : IDL.Text,
+  'descricao' : IDL.Text,
+  'ativo' : IDL.Bool,
+  'tipo' : IDL.Text,
+  'metaValor' : IDL.Nat,
+});
 export const Progresso = IDL.Record({
   'percentualLido' : IDL.Nat,
   'textoId' : IDL.Nat,
   'usuarioId' : IDL.Text,
   'ultimaLeitura' : IDL.Int,
+});
+export const ProgressoDesafio = IDL.Record({
+  'concluido' : IDL.Bool,
+  'dataConclusao' : IDL.Int,
+  'desafioId' : IDL.Nat,
+  'usuarioId' : IDL.Text,
+  'progressoAtual' : IDL.Nat,
+});
+export const EntradaRanking = IDL.Record({
+  'nome' : IDL.Text,
+  'tokens' : IDL.Nat,
+});
+export const Recompensa = IDL.Record({
+  'id' : IDL.Nat,
+  'descricao' : IDL.Text,
+  'valor' : IDL.Nat,
+  'data' : IDL.Int,
+  'usuarioId' : IDL.Text,
 });
 
 export const idlService = IDL.Service({
@@ -52,6 +87,11 @@ export const idlService = IDL.Service({
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'buscarTextosPorTitulo' : IDL.Func([IDL.Text], [IDL.Vec(Texto)], ['query']),
   'criarAnotacao' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [IDL.Nat], []),
+  'criarDesafio' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat],
+      [IDL.Nat],
+      [],
+    ),
   'criarTexto' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
@@ -70,10 +110,27 @@ export const idlService = IDL.Service({
       [IDL.Opt(ConfiguracaoLeitura)],
       ['query'],
     ),
+  'getConquistas' : IDL.Func([], [IDL.Vec(Conquista)], ['query']),
+  'getDesafio' : IDL.Func([IDL.Nat], [IDL.Opt(Desafio)], ['query']),
+  'getDesafiosAtivos' : IDL.Func([], [IDL.Vec(Desafio)], ['query']),
+  'getDesafiosExemplo' : IDL.Func([], [IDL.Vec(Desafio)], ['query']),
   'getProgresso' : IDL.Func([IDL.Nat], [IDL.Opt(Progresso)], ['query']),
+  'getProgressoDesafio' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Opt(ProgressoDesafio)],
+      ['query'],
+    ),
+  'getRanking' : IDL.Func([], [IDL.Vec(EntradaRanking)], ['query']),
+  'getRecompensas' : IDL.Func([], [IDL.Vec(Recompensa)], ['query']),
+  'getSaldoAluno' : IDL.Func([], [IDL.Nat], ['query']),
   'getTexto' : IDL.Func([IDL.Nat], [IDL.Opt(Texto)], ['query']),
   'getTextosExemplo' : IDL.Func([], [IDL.Vec(Texto)], ['query']),
   'getTodasAnotacoes' : IDL.Func([], [IDL.Vec(Anotacao)], ['query']),
+  'getTodosProgressosDesafio' : IDL.Func(
+      [],
+      [IDL.Vec(ProgressoDesafio)],
+      ['query'],
+    ),
   'getTodosTextos' : IDL.Func([], [IDL.Vec(Texto)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
@@ -86,6 +143,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(Texto)],
       ['query'],
     ),
+  'resgatarSaldo' : IDL.Func([], [IDL.Nat], []),
   'salvarConfiguracaoLeitura' : IDL.Func([ConfiguracaoLeitura], [], []),
   'salvarProgresso' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
@@ -126,11 +184,43 @@ export const idlFactory = ({ IDL }) => {
     'usuarioId' : IDL.Text,
     'tamanhoFonte' : IDL.Nat,
   });
+  const Conquista = IDL.Record({
+    'id' : IDL.Nat,
+    'marco' : IDL.Text,
+    'dataConquista' : IDL.Int,
+    'descricao' : IDL.Text,
+    'nome' : IDL.Text,
+    'usuarioId' : IDL.Text,
+  });
+  const Desafio = IDL.Record({
+    'id' : IDL.Nat,
+    'recompensaTokens' : IDL.Nat,
+    'titulo' : IDL.Text,
+    'descricao' : IDL.Text,
+    'ativo' : IDL.Bool,
+    'tipo' : IDL.Text,
+    'metaValor' : IDL.Nat,
+  });
   const Progresso = IDL.Record({
     'percentualLido' : IDL.Nat,
     'textoId' : IDL.Nat,
     'usuarioId' : IDL.Text,
     'ultimaLeitura' : IDL.Int,
+  });
+  const ProgressoDesafio = IDL.Record({
+    'concluido' : IDL.Bool,
+    'dataConclusao' : IDL.Int,
+    'desafioId' : IDL.Nat,
+    'usuarioId' : IDL.Text,
+    'progressoAtual' : IDL.Nat,
+  });
+  const EntradaRanking = IDL.Record({ 'nome' : IDL.Text, 'tokens' : IDL.Nat });
+  const Recompensa = IDL.Record({
+    'id' : IDL.Nat,
+    'descricao' : IDL.Text,
+    'valor' : IDL.Nat,
+    'data' : IDL.Int,
+    'usuarioId' : IDL.Text,
   });
   
   return IDL.Service({
@@ -138,6 +228,11 @@ export const idlFactory = ({ IDL }) => {
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'buscarTextosPorTitulo' : IDL.Func([IDL.Text], [IDL.Vec(Texto)], ['query']),
     'criarAnotacao' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [IDL.Nat], []),
+    'criarDesafio' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat],
+        [IDL.Nat],
+        [],
+      ),
     'criarTexto' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
@@ -156,10 +251,27 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(ConfiguracaoLeitura)],
         ['query'],
       ),
+    'getConquistas' : IDL.Func([], [IDL.Vec(Conquista)], ['query']),
+    'getDesafio' : IDL.Func([IDL.Nat], [IDL.Opt(Desafio)], ['query']),
+    'getDesafiosAtivos' : IDL.Func([], [IDL.Vec(Desafio)], ['query']),
+    'getDesafiosExemplo' : IDL.Func([], [IDL.Vec(Desafio)], ['query']),
     'getProgresso' : IDL.Func([IDL.Nat], [IDL.Opt(Progresso)], ['query']),
+    'getProgressoDesafio' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Opt(ProgressoDesafio)],
+        ['query'],
+      ),
+    'getRanking' : IDL.Func([], [IDL.Vec(EntradaRanking)], ['query']),
+    'getRecompensas' : IDL.Func([], [IDL.Vec(Recompensa)], ['query']),
+    'getSaldoAluno' : IDL.Func([], [IDL.Nat], ['query']),
     'getTexto' : IDL.Func([IDL.Nat], [IDL.Opt(Texto)], ['query']),
     'getTextosExemplo' : IDL.Func([], [IDL.Vec(Texto)], ['query']),
     'getTodasAnotacoes' : IDL.Func([], [IDL.Vec(Anotacao)], ['query']),
+    'getTodosProgressosDesafio' : IDL.Func(
+        [],
+        [IDL.Vec(ProgressoDesafio)],
+        ['query'],
+      ),
     'getTodosTextos' : IDL.Func([], [IDL.Vec(Texto)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
@@ -172,6 +284,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Texto)],
         ['query'],
       ),
+    'resgatarSaldo' : IDL.Func([], [IDL.Nat], []),
     'salvarConfiguracaoLeitura' : IDL.Func([ConfiguracaoLeitura], [], []),
     'salvarProgresso' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),

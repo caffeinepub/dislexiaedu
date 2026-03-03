@@ -117,7 +117,7 @@ export default function HomePage() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Link to="/anotacoes">
+            <Link to="/biblioteca">
               <Card
                 className="group hover:shadow-card transition-all duration-200 cursor-pointer border-border/60 hover:border-amber-reader/40"
                 data-ocid="home.notes_button"

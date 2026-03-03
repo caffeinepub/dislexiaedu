@@ -378,7 +378,7 @@ export default function LeitorPage() {
               onClick={() => updateConfig("focusMode", !config.focusMode)}
               className="h-8 px-2"
               title="Modo foco"
-              data-ocid="reader.focus_toggle"
+              data-ocid="leitor.modo_foco_toggle"
             >
               {config.focusMode ? (
                 <Eye className="h-4 w-4" />
@@ -532,7 +532,7 @@ export default function LeitorPage() {
                               )
                             }
                             className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
-                            data-ocid="reader.font_size_select"
+                            data-ocid="leitor.fonte_input"
                           >
                             <Minus className="h-3.5 w-3.5" />
                           </button>
@@ -548,7 +548,7 @@ export default function LeitorPage() {
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-muted hover:bg-muted/80",
                                 )}
-                                data-ocid="reader.font_size_select"
+                                data-ocid="leitor.fonte_input"
                               >
                                 {s}
                               </button>
@@ -588,7 +588,7 @@ export default function LeitorPage() {
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-muted hover:bg-muted/80",
                                 )}
-                                data-ocid="reader.letter_spacing_select"
+                                data-ocid="leitor.fonte_input"
                               >
                                 {s === "normal"
                                   ? "Normal"
@@ -621,7 +621,7 @@ export default function LeitorPage() {
                                   ? "bg-primary text-primary-foreground"
                                   : "bg-muted hover:bg-muted/80",
                               )}
-                              data-ocid="reader.line_spacing_select"
+                              data-ocid="leitor.fonte_input"
                             >
                               {s === "normal"
                                 ? "Normal"
@@ -640,7 +640,7 @@ export default function LeitorPage() {
                           Cor de fundo
                         </Label>
                         <div className="flex gap-2 flex-wrap">
-                          {BG_COLORS.map((c, i) => (
+                          {BG_COLORS.map((c, _i) => (
                             <button
                               type="button"
                               key={c.hex}
@@ -653,7 +653,7 @@ export default function LeitorPage() {
                                   : "border-border/60 hover:border-primary/50",
                               )}
                               style={{ backgroundColor: c.hex }}
-                              data-ocid={`reader.bg_color_button.${i + 1}`}
+                              data-ocid="leitor.cor_select"
                             >
                               {config.bgColor === c.hex && (
                                 <Check className="h-3.5 w-3.5 text-foreground/70" />
@@ -688,7 +688,7 @@ export default function LeitorPage() {
                                   ? "bg-primary text-primary-foreground"
                                   : "bg-muted hover:bg-muted/80",
                               )}
-                              data-ocid="reader.column_width_select"
+                              data-ocid="leitor.fonte_input"
                             >
                               {w === "narrow"
                                 ? "Estreita"
@@ -711,7 +711,7 @@ export default function LeitorPage() {
                         <Switch
                           checked={config.focusMode}
                           onCheckedChange={(v) => updateConfig("focusMode", v)}
-                          data-ocid="reader.focus_toggle"
+                          data-ocid="leitor.modo_foco_toggle"
                         />
                       </div>
 
@@ -734,6 +734,7 @@ export default function LeitorPage() {
                         className="w-full"
                         size="sm"
                         onClick={handleSaveConfig}
+                        data-ocid="leitor.salvar_progresso_button"
                       >
                         Salvar configurações
                       </Button>
@@ -787,7 +788,7 @@ export default function LeitorPage() {
                       }
                       rows={3}
                       className="resize-none text-sm mb-3"
-                      data-ocid="reader.annotation.input"
+                      data-ocid="leitor.anotacao_input"
                     />
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1.5">
@@ -806,6 +807,7 @@ export default function LeitorPage() {
                                 : "border-transparent hover:border-foreground/30",
                             )}
                             style={{ backgroundColor: c.hex }}
+                            data-ocid="leitor.anotacao_cor_select"
                           />
                         ))}
                       </div>
@@ -814,7 +816,7 @@ export default function LeitorPage() {
                         onClick={handleAddNote}
                         disabled={isCriandoAnotacao || !newNote.conteudo.trim()}
                         className="h-7 text-xs"
-                        data-ocid="reader.annotation.add_button"
+                        data-ocid="leitor.anotacao_add_button"
                       >
                         {isCriandoAnotacao ? (
                           <Loader2 className="h-3 w-3 animate-spin" />

@@ -27,11 +27,43 @@ export interface ConfiguracaoLeitura {
   'usuarioId' : string,
   'tamanhoFonte' : bigint,
 }
+export interface Conquista {
+  'id' : bigint,
+  'marco' : string,
+  'dataConquista' : bigint,
+  'descricao' : string,
+  'nome' : string,
+  'usuarioId' : string,
+}
+export interface Desafio {
+  'id' : bigint,
+  'recompensaTokens' : bigint,
+  'titulo' : string,
+  'descricao' : string,
+  'ativo' : boolean,
+  'tipo' : string,
+  'metaValor' : bigint,
+}
+export interface EntradaRanking { 'nome' : string, 'tokens' : bigint }
 export interface Progresso {
   'percentualLido' : bigint,
   'textoId' : bigint,
   'usuarioId' : string,
   'ultimaLeitura' : bigint,
+}
+export interface ProgressoDesafio {
+  'concluido' : boolean,
+  'dataConclusao' : bigint,
+  'desafioId' : bigint,
+  'usuarioId' : string,
+  'progressoAtual' : bigint,
+}
+export interface Recompensa {
+  'id' : bigint,
+  'descricao' : string,
+  'valor' : bigint,
+  'data' : bigint,
+  'usuarioId' : string,
 }
 export interface Texto {
   'id' : bigint,
@@ -51,6 +83,10 @@ export interface _SERVICE {
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'buscarTextosPorTitulo' : ActorMethod<[string], Array<Texto>>,
   'criarAnotacao' : ActorMethod<[bigint, string, string], bigint>,
+  'criarDesafio' : ActorMethod<
+    [string, string, string, bigint, bigint],
+    bigint
+  >,
   'criarTexto' : ActorMethod<[string, string, string, string], bigint>,
   'deletarAnotacao' : ActorMethod<[bigint], undefined>,
   'deletarTexto' : ActorMethod<[bigint], undefined>,
@@ -61,14 +97,24 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getConfiguracaoLeitura' : ActorMethod<[], [] | [ConfiguracaoLeitura]>,
+  'getConquistas' : ActorMethod<[], Array<Conquista>>,
+  'getDesafio' : ActorMethod<[bigint], [] | [Desafio]>,
+  'getDesafiosAtivos' : ActorMethod<[], Array<Desafio>>,
+  'getDesafiosExemplo' : ActorMethod<[], Array<Desafio>>,
   'getProgresso' : ActorMethod<[bigint], [] | [Progresso]>,
+  'getProgressoDesafio' : ActorMethod<[bigint], [] | [ProgressoDesafio]>,
+  'getRanking' : ActorMethod<[], Array<EntradaRanking>>,
+  'getRecompensas' : ActorMethod<[], Array<Recompensa>>,
+  'getSaldoAluno' : ActorMethod<[], bigint>,
   'getTexto' : ActorMethod<[bigint], [] | [Texto]>,
   'getTextosExemplo' : ActorMethod<[], Array<Texto>>,
   'getTodasAnotacoes' : ActorMethod<[], Array<Anotacao>>,
+  'getTodosProgressosDesafio' : ActorMethod<[], Array<ProgressoDesafio>>,
   'getTodosTextos' : ActorMethod<[], Array<Texto>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'listarTextosPorCategoria' : ActorMethod<[string], Array<Texto>>,
+  'resgatarSaldo' : ActorMethod<[], bigint>,
   'salvarConfiguracaoLeitura' : ActorMethod<[ConfiguracaoLeitura], undefined>,
   'salvarProgresso' : ActorMethod<[bigint, bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,

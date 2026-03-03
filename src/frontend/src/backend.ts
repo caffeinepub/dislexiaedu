@@ -89,12 +89,6 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface Progresso {
-    percentualLido: bigint;
-    textoId: bigint;
-    usuarioId: string;
-    ultimaLeitura: bigint;
-}
 export interface ConfiguracaoLeitura {
     espacamentoLetras: string;
     corFundo: string;
@@ -103,6 +97,55 @@ export interface ConfiguracaoLeitura {
     larguraColuna: bigint;
     usuarioId: string;
     tamanhoFonte: bigint;
+}
+export interface ProgressoDesafio {
+    concluido: boolean;
+    dataConclusao: bigint;
+    desafioId: bigint;
+    usuarioId: string;
+    progressoAtual: bigint;
+}
+export interface Progresso {
+    percentualLido: bigint;
+    textoId: bigint;
+    usuarioId: string;
+    ultimaLeitura: bigint;
+}
+export interface Desafio {
+    id: bigint;
+    recompensaTokens: bigint;
+    titulo: string;
+    descricao: string;
+    ativo: boolean;
+    tipo: string;
+    metaValor: bigint;
+}
+export interface Anotacao {
+    id: bigint;
+    cor: string;
+    conteudo: string;
+    textoId: bigint;
+    dataCriacao: bigint;
+    usuarioId: string;
+}
+export interface Recompensa {
+    id: bigint;
+    descricao: string;
+    valor: bigint;
+    data: bigint;
+    usuarioId: string;
+}
+export interface Conquista {
+    id: bigint;
+    marco: string;
+    dataConquista: bigint;
+    descricao: string;
+    nome: string;
+    usuarioId: string;
+}
+export interface EntradaRanking {
+    nome: string;
+    tokens: bigint;
 }
 export interface Texto {
     id: bigint;
@@ -116,14 +159,6 @@ export interface Texto {
 export interface UserProfile {
     name: string;
 }
-export interface Anotacao {
-    id: bigint;
-    cor: string;
-    conteudo: string;
-    textoId: bigint;
-    dataCriacao: bigint;
-    usuarioId: string;
-}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -134,6 +169,7 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     buscarTextosPorTitulo(parteTitulo: string): Promise<Array<Texto>>;
     criarAnotacao(textoId: bigint, conteudo: string, cor: string): Promise<bigint>;
+    criarDesafio(titulo: string, descricao: string, tipo: string, metaValor: bigint, recompensaTokens: bigint): Promise<bigint>;
     criarTexto(titulo: string, conteudo: string, categoria: string, autor: string): Promise<bigint>;
     deletarAnotacao(id: bigint): Promise<void>;
     deletarTexto(id: bigint): Promise<void>;
@@ -144,19 +180,29 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getConfiguracaoLeitura(): Promise<ConfiguracaoLeitura | null>;
+    getConquistas(): Promise<Array<Conquista>>;
+    getDesafio(id: bigint): Promise<Desafio | null>;
+    getDesafiosAtivos(): Promise<Array<Desafio>>;
+    getDesafiosExemplo(): Promise<Array<Desafio>>;
     getProgresso(textoId: bigint): Promise<Progresso | null>;
+    getProgressoDesafio(desafioId: bigint): Promise<ProgressoDesafio | null>;
+    getRanking(): Promise<Array<EntradaRanking>>;
+    getRecompensas(): Promise<Array<Recompensa>>;
+    getSaldoAluno(): Promise<bigint>;
     getTexto(id: bigint): Promise<Texto | null>;
     getTextosExemplo(): Promise<Array<Texto>>;
     getTodasAnotacoes(): Promise<Array<Anotacao>>;
+    getTodosProgressosDesafio(): Promise<Array<ProgressoDesafio>>;
     getTodosTextos(): Promise<Array<Texto>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     listarTextosPorCategoria(categoria: string): Promise<Array<Texto>>;
+    resgatarSaldo(): Promise<bigint>;
     salvarConfiguracaoLeitura(config: ConfiguracaoLeitura): Promise<void>;
     salvarProgresso(textoId: bigint, percentualLido: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
 }
-import type { Anotacao as _Anotacao, ConfiguracaoLeitura as _ConfiguracaoLeitura, Progresso as _Progresso, Texto as _Texto, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { Anotacao as _Anotacao, ConfiguracaoLeitura as _ConfiguracaoLeitura, Desafio as _Desafio, Progresso as _Progresso, ProgressoDesafio as _ProgressoDesafio, Texto as _Texto, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -212,6 +258,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.criarAnotacao(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async criarDesafio(arg0: string, arg1: string, arg2: string, arg3: bigint, arg4: bigint): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.criarDesafio(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.criarDesafio(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }
@@ -355,32 +415,144 @@ export class Backend implements backendInterface {
             return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getProgresso(arg0: bigint): Promise<Progresso | null> {
+    async getConquistas(): Promise<Array<Conquista>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getProgresso(arg0);
+                const result = await this.actor.getConquistas();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getConquistas();
+            return result;
+        }
+    }
+    async getDesafio(arg0: bigint): Promise<Desafio | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getDesafio(arg0);
                 return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getProgresso(arg0);
+            const result = await this.actor.getDesafio(arg0);
             return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getTexto(arg0: bigint): Promise<Texto | null> {
+    async getDesafiosAtivos(): Promise<Array<Desafio>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getTexto(arg0);
+                const result = await this.actor.getDesafiosAtivos();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getDesafiosAtivos();
+            return result;
+        }
+    }
+    async getDesafiosExemplo(): Promise<Array<Desafio>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getDesafiosExemplo();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getDesafiosExemplo();
+            return result;
+        }
+    }
+    async getProgresso(arg0: bigint): Promise<Progresso | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getProgresso(arg0);
                 return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getTexto(arg0);
+            const result = await this.actor.getProgresso(arg0);
             return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getProgressoDesafio(arg0: bigint): Promise<ProgressoDesafio | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getProgressoDesafio(arg0);
+                return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getProgressoDesafio(arg0);
+            return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getRanking(): Promise<Array<EntradaRanking>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRanking();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRanking();
+            return result;
+        }
+    }
+    async getRecompensas(): Promise<Array<Recompensa>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRecompensas();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRecompensas();
+            return result;
+        }
+    }
+    async getSaldoAluno(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSaldoAluno();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSaldoAluno();
+            return result;
+        }
+    }
+    async getTexto(arg0: bigint): Promise<Texto | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTexto(arg0);
+                return from_candid_opt_n11(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTexto(arg0);
+            return from_candid_opt_n11(this._uploadFile, this._downloadFile, result);
         }
     }
     async getTextosExemplo(): Promise<Array<Texto>> {
@@ -408,6 +580,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getTodasAnotacoes();
+            return result;
+        }
+    }
+    async getTodosProgressosDesafio(): Promise<Array<ProgressoDesafio>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTodosProgressosDesafio();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTodosProgressosDesafio();
             return result;
         }
     }
@@ -467,6 +653,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async resgatarSaldo(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.resgatarSaldo();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.resgatarSaldo();
+            return result;
+        }
+    }
     async salvarConfiguracaoLeitura(arg0: ConfiguracaoLeitura): Promise<void> {
         if (this.processError) {
             try {
@@ -513,6 +713,12 @@ export class Backend implements backendInterface {
 function from_candid_UserRole_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n6(_uploadFile, _downloadFile, value);
 }
+function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_ProgressoDesafio]): ProgressoDesafio | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Texto]): Texto | null {
+    return value.length === 0 ? null : value[0];
+}
 function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Anotacao]): Anotacao | null {
     return value.length === 0 ? null : value[0];
 }
@@ -522,10 +728,10 @@ function from_candid_opt_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
 function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_ConfiguracaoLeitura]): ConfiguracaoLeitura | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Progresso]): Progresso | null {
+function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Desafio]): Desafio | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Texto]): Texto | null {
+function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Progresso]): Progresso | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {

@@ -9,23 +9,15 @@ import {
   createRouter,
   useRouterState,
 } from "@tanstack/react-router";
-import {
-  BookMarked,
-  BookOpen,
-  FileText,
-  Library,
-  Menu,
-  Settings,
-  X,
-} from "lucide-react";
+import { BookMarked, Coins, Library, Menu, Settings, X } from "lucide-react";
 import { useState } from "react";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
-import AnotacoesPage from "./pages/AnotacoesPage";
+import { useGetSaldoAluno } from "./hooks/useQueries";
 import BibliotecaPage from "./pages/BibliotecaPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
-import HomePage from "./pages/HomePage";
 import LeitorPage from "./pages/LeitorPage";
 import LoginPage from "./pages/LoginPage";
+import RecompensasPage from "./pages/RecompensasPage";
 
 // ─── Root Layout ─────────────────────────────────────────────────────────────
 
@@ -59,7 +51,7 @@ function RootLayout() {
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <BookMarked className="h-6 w-6 text-sidebar-primary" />
-          <span className="font-bold text-sidebar-foreground text-lg">
+          <span className="font-display font-bold text-sidebar-foreground text-lg">
             DislexiaEdu
           </span>
         </div>
@@ -102,28 +94,23 @@ function RootLayout() {
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border flex items-center justify-around px-2 py-2 z-30">
         <MobileNavLink
-          to="/"
-          icon={<BookOpen className="h-5 w-5" />}
-          label="Início"
-          data-ocid="nav.home_link"
-        />
-        <MobileNavLink
           to="/biblioteca"
           icon={<Library className="h-5 w-5" />}
           label="Biblioteca"
           data-ocid="nav.biblioteca_link"
         />
         <MobileNavLink
-          to="/anotacoes"
-          icon={<FileText className="h-5 w-5" />}
-          label="Notas"
-          data-ocid="nav.notes_link"
+          to="/recompensas"
+          icon={<Coins className="h-5 w-5" />}
+          label="Recompensas"
+          data-ocid="nav.recompensas_link"
+          highlight
         />
         <MobileNavLink
           to="/configuracoes"
           icon={<Settings className="h-5 w-5" />}
           label="Config"
-          data-ocid="nav.settings_link"
+          data-ocid="nav.configuracoes_link"
         />
       </nav>
 
@@ -134,18 +121,29 @@ function RootLayout() {
 
 function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const { clear, identity } = useInternetIdentity();
+  const { data: saldo } = useGetSaldoAluno();
   const principal = identity?.getPrincipal().toString() ?? "";
-  const shortPrincipal = `${principal.slice(0, 5)}...${principal.slice(-3)}`;
+  const shortPrincipal =
+    principal.length > 10
+      ? `${principal.slice(0, 5)}...${principal.slice(-3)}`
+      : principal;
+  const saldoNum = Number(saldo ?? BigInt(0));
 
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border">
-        <div className="h-9 w-9 rounded-xl bg-sidebar-primary/20 flex items-center justify-center">
-          <BookMarked className="h-5 w-5 text-sidebar-primary" />
+        <div
+          className="h-10 w-10 rounded-xl flex items-center justify-center"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.82 0.14 78), oklch(0.68 0.17 62))",
+          }}
+        >
+          <BookMarked className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h1 className="font-bold text-sidebar-foreground text-lg leading-tight">
+          <h1 className="font-display font-bold text-sidebar-foreground text-lg leading-tight">
             DislexiaEdu
           </h1>
           <p className="text-sidebar-foreground/50 text-xs">
@@ -157,34 +155,54 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
       {/* Nav links */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         <SidebarNavLink
-          to="/"
-          icon={<BookOpen className="h-4 w-4" />}
-          label="Início"
-          onClick={onLinkClick}
-          data-ocid="nav.home_link"
-        />
-        <SidebarNavLink
           to="/biblioteca"
-          icon={<Library className="h-4 w-4" />}
+          icon={<Library className="h-5 w-5" />}
           label="Biblioteca"
           onClick={onLinkClick}
           data-ocid="nav.biblioteca_link"
         />
         <SidebarNavLink
-          to="/anotacoes"
-          icon={<FileText className="h-4 w-4" />}
-          label="Minhas Anotações"
+          to="/recompensas"
+          icon={<Coins className="h-5 w-5" />}
+          label="Recompensas"
           onClick={onLinkClick}
-          data-ocid="nav.notes_link"
+          data-ocid="nav.recompensas_link"
+          highlight
         />
         <SidebarNavLink
           to="/configuracoes"
-          icon={<Settings className="h-4 w-4" />}
+          icon={<Settings className="h-5 w-5" />}
           label="Configurações"
           onClick={onLinkClick}
-          data-ocid="nav.settings_link"
+          data-ocid="nav.configuracoes_link"
         />
       </nav>
+
+      {/* Token balance in sidebar */}
+      <div
+        className="px-4 py-3 mx-3 mb-2 rounded-xl"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.24 0.05 215), oklch(0.28 0.07 205))",
+        }}
+      >
+        <p className="text-sidebar-foreground/50 text-xs mb-0.5">Seu saldo</p>
+        <div className="flex items-center gap-1.5">
+          <span
+            className="font-display font-black text-xl"
+            style={{
+              background:
+                "linear-gradient(90deg, oklch(0.85 0.12 80), oklch(0.70 0.17 65))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            {saldoNum.toLocaleString("pt-BR")}
+          </span>
+          <span className="text-sidebar-foreground/50 text-sm">tokens</span>
+        </div>
+      </div>
 
       {/* User footer */}
       <div className="px-4 py-4 border-t border-sidebar-border">
@@ -218,12 +236,14 @@ function SidebarNavLink({
   icon,
   label,
   onClick,
+  highlight,
   "data-ocid": dataOcid,
 }: {
   to: string;
   icon: React.ReactNode;
   label: string;
   onClick?: () => void;
+  highlight?: boolean;
   "data-ocid"?: string;
 }) {
   const routerState = useRouterState();
@@ -237,9 +257,27 @@ function SidebarNavLink({
       onClick={onClick}
       data-ocid={dataOcid}
       className={cn("sidebar-nav-link", isActive && "active")}
+      style={
+        highlight && !isActive
+          ? {
+              color: "oklch(0.75 0.13 80 / 0.8)",
+            }
+          : undefined
+      }
     >
       {icon}
       <span className="text-sm">{label}</span>
+      {highlight && !isActive && (
+        <span
+          className="ml-auto text-xs font-bold px-1.5 py-0.5 rounded-full"
+          style={{
+            background: "oklch(0.78 0.15 75 / 0.2)",
+            color: "oklch(0.75 0.13 80)",
+          }}
+        >
+          ✦
+        </span>
+      )}
     </Link>
   );
 }
@@ -248,11 +286,13 @@ function MobileNavLink({
   to,
   icon,
   label,
+  highlight,
   "data-ocid": dataOcid,
 }: {
   to: string;
   icon: React.ReactNode;
   label: string;
+  highlight?: boolean;
   "data-ocid"?: string;
 }) {
   const routerState = useRouterState();
@@ -268,7 +308,9 @@ function MobileNavLink({
         "flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-all",
         isActive
           ? "text-sidebar-primary"
-          : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+          : highlight
+            ? "text-sidebar-primary/70 hover:text-sidebar-primary"
+            : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
       )}
     >
       {icon}
@@ -281,13 +323,13 @@ function MobileNavLink({
 
 const rootRoute = createRootRoute({ component: RootLayout });
 
-const homeRoute = createRoute({
+const bibliotecaRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: HomePage,
+  component: BibliotecaPage,
 });
 
-const bibliotecaRoute = createRoute({
+const bibliotecaRoute2 = createRoute({
   getParentRoute: () => rootRoute,
   path: "/biblioteca",
   component: BibliotecaPage,
@@ -299,10 +341,10 @@ const leitorRoute = createRoute({
   component: LeitorPage,
 });
 
-const anotacoesRoute = createRoute({
+const recompensasRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/anotacoes",
-  component: AnotacoesPage,
+  path: "/recompensas",
+  component: RecompensasPage,
 });
 
 const configuracoesRoute = createRoute({
@@ -312,10 +354,10 @@ const configuracoesRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-  homeRoute,
   bibliotecaRoute,
+  bibliotecaRoute2,
   leitorRoute,
-  anotacoesRoute,
+  recompensasRoute,
   configuracoesRoute,
 ]);
 

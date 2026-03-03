@@ -1,56 +1,56 @@
-# DislexiaEdu - App para Alunos com Dislexia no Ensino Superior
+# DislexiaEdu - Sistema de Recompensas
 
 ## Current State
-Novo projeto. Nenhuma funcionalidade existente.
+
+O app já possui:
+- Biblioteca de textos com busca e filtros por categoria
+- Leitor adaptado com controles de acessibilidade (tamanho de fonte, espaçamento, cor de fundo, modo foco, régua de leitura)
+- Anotações coloridas vinculadas aos textos
+- Progresso de leitura salvo automaticamente
+- Configurações padrão persistentes por usuário
+- Autenticação com controle de acesso (admin/user)
 
 ## Requested Changes (Diff)
 
 ### Add
 
-**Backend (Motoko):**
-- Entidade `Texto`: id, titulo, conteudo, categoria, dataCriacao
-- Entidade `Anotacao`: id, textoId, conteudo, cor, dataCriacao
-- Entidade `Progresso`: usuarioId, textoId, percentualLido, ultimaLeitura
-- CRUD de textos e materiais de estudo
-- CRUD de anotações pessoais por aluno
-- Registro de progresso de leitura
-- Categorias de conteúdo: Resumos, Artigos, Anotações, Exercícios
+**Backend:**
+- `Desafio`: tipo com id, titulo, descricao, tipo (leitura/anotacao/sequencia/quiz), metaValor (Nat), recompensaToken (Nat), dataInicio, dataFim, ativo
+- `DesafioAluno`: progresso do aluno em um desafio (desafioId, usuarioId, progressoAtual, concluido, dataConlusao)
+- `Recompensa`: tipo com id, usuarioId, valor (Nat, representando centavos/tokens), tipo, descricao, data
+- `SaldoAluno`: saldo acumulado de tokens por usuário
+- `Conquista`: badges conquistados (id, nome, descricao, icone, dataConquista, usuarioId)
+- APIs: `getDesafios`, `getDesafiosAtivos`, `registrarProgressoDesafio`, `concluirDesafio`, `getSaldoAluno`, `getRecompensas`, `getConquistas`, `resgatar`
+- Manter todas as APIs existentes de textos, progresso, anotações e configuração
 
-**Frontend (React):**
-- Tela inicial com painel de boas-vindas e acesso rápido a recursos
-- Leitor de textos adaptado para dislexia:
-  - Fonte OpenDyslexic ou fonte sem serifa com espaçamento aumentado
-  - Controle de tamanho da fonte (pequeno, médio, grande, extra-grande)
-  - Controle de espaçamento entre letras e linhas
-  - Modo de foco (destaque linha por linha)
-  - Régua de leitura (highlight da linha atual)
-  - Paleta de cores de fundo (branco, creme, azul claro, amarelo claro, verde claro)
-  - Controle de largura da coluna de texto
-- Painel de materiais de estudo:
-  - Listagem de textos por categoria
-  - Busca por título
-  - Indicador de progresso de leitura
-- Editor de anotações pessoais:
-  - Anotações em cor destacada
-  - Vinculadas a textos específicos ou avulsas
-- Painel de acessibilidade (configurações persistentes de leitura)
-- Navegação simples e intuitiva (menu lateral fixo)
-- Conteúdo de exemplo pré-carregado para demonstração
+**Frontend:**
+- Aba/seção "Desafios & Recompensas" no menu de navegação
+- Dashboard de recompensas: saldo atual em tokens, histórico de ganhos, conquistas/badges
+- Lista de desafios ativos com progresso visual (barra de progresso)
+- Tipos de desafio:
+  - Leitura: completar X% de um texto
+  - Anotação: criar X anotações
+  - Sequência: ler N textos seguidos
+- Notificação visual ao completar desafio e ganhar tokens
+- Seção de conquistas (badges) com ícones e descrições
+- Integrar ganho de tokens ao salvar progresso de leitura e criar anotações
+- Leaderboard simples (ranking dos alunos com mais tokens)
 
 ### Modify
-- Nenhum (projeto novo)
+
+- `salvarProgresso`: ao salvar 100% verificar se algum desafio de leitura foi concluído
+- `criarAnotacao`: ao criar anotação verificar se desafio de anotação foi concluído
+- Navegação do frontend: adicionar item "Recompensas"
 
 ### Remove
-- Nenhum (projeto novo)
+
+- Nada a remover
 
 ## Implementation Plan
 
-1. Criar modelo de dados no backend: Texto, Anotacao, Progresso, ConfiguracaoLeitura
-2. Implementar endpoints CRUD para textos, anotações e progresso
-3. Criar dados de exemplo (textos educativos sobre temas universitários comuns)
-4. Frontend: Layout principal com menu lateral e área de conteúdo
-5. Frontend: Componente de leitor adaptado com todos os controles de acessibilidade
-6. Frontend: Painel de materiais com categorias e busca
-7. Frontend: Editor e visualizador de anotações
-8. Frontend: Painel de configurações de acessibilidade
-9. Integração frontend com backend via bindings gerados
+1. Reescrever backend com todos os tipos existentes + novos tipos de desafios, recompensas, saldo e conquistas
+2. Adicionar funções: criar/listar desafios, registrar progresso em desafios, concluir desafio e creditar tokens, consultar saldo, listar recompensas e conquistas, resgatar saldo
+3. Incluir desafios de exemplo pré-carregados (seed data via query)
+4. Frontend: adicionar página "Recompensas" com dashboard de tokens, lista de desafios com progresso, badges conquistados e leaderboard
+5. Integrar hooks de ganho de tokens nas ações de leitura e anotação existentes
+6. Mostrar notificações toast ao completar desafios e ganhar recompensas
